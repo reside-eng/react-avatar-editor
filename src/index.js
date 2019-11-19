@@ -139,6 +139,59 @@ const drawRoundedRect = (context, x, y, width, height, borderRadius) => {
   }
 }
 
+/**
+ * Side extension for Bleeds
+ * Draws cut lines
+*/
+const drawCutLines = (context, outerBoxX, outerBoxY, innerBoxWidth, innerBoxHeight) => {
+  const bleed = 20; // TODO: make this dynamic from the DB
+  context.strokeStyle = '#ffffff';
+  context.lineWidth = 2;
+  context.setLineDash([7, 3]);
+
+  // top 
+  context.beginPath();
+  context.moveTo(0, outerBoxY + bleed);
+  context.lineTo(innerBoxWidth, outerBoxY + bleed);
+  context.stroke();
+  context.closePath();
+
+  // right
+  context.beginPath();
+  context.moveTo(innerBoxWidth - outerBoxX - bleed, 0);
+  context.lineTo(innerBoxWidth - outerBoxX - bleed, innerBoxHeight);
+  context.stroke();
+  context.closePath();
+
+  // bottom
+  context.beginPath();
+  context.moveTo(0, innerBoxHeight - outerBoxY);
+  context.lineTo(innerBoxWidth, innerBoxHeight - outerBoxY);
+  context.stroke();
+  context.closePath();
+
+  // left
+  context.beginPath();
+  context.moveTo(outerBoxX + bleed, 0);
+  context.lineTo(outerBoxX + bleed, innerBoxHeight);
+  context.stroke();
+  context.closePath();
+}
+
+/**
+ * Side extension for Bleeds
+ * Draws bleed rectangle
+*/
+const drawBleedRect = (context, outerBoxX, outerBoxY, innerBoxWidth, innerBoxHeight) => {
+  context.strokeStyle = '#E03F6F';
+  context.lineWidth = 2;
+  context.setLineDash([]);
+
+  context.beginPath();
+  context.strokeRect(outerBoxX, outerBoxY, innerBoxWidth, innerBoxHeight);
+  context.closePath();
+}
+
 const defaultEmptyImage = {
   x: 0.5,
   y: 0.5,
@@ -609,6 +662,22 @@ class AvatarEditor extends React.Component {
     )
     context.rect(width, 0, -width, height) // outer rect, drawn "counterclockwise"
     context.fill('evenodd')
+
+    drawCutLines(
+      context, 
+      borderSizeX,
+      borderSizeY,
+      width, 
+      height
+    )
+
+    drawBleedRect(
+      context, 
+      borderSizeX,
+      borderSizeY,
+      width - borderSizeX * 2,
+      height - borderSizeY * 2
+    )
 
     context.restore()
   }
