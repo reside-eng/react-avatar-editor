@@ -10,8 +10,8 @@
     "lint": "eslint --cache --ext .js,.jsx src",
     "test": "NODE_ENV=test jest",
     "test:watch": "NODE_ENV=test jest --watch",
-    "demo:build": "NODE_ENV=production webpack",
     "demo:watch": "webpack-dev-server",
+    "demo:build": "NODE_ENV=production webpack",
     "prepublish": "yarn run lint && yarn run test && yarn run clean && yarn run build",
     "postversion": "git push --tags origin HEAD"
   },
