@@ -146,6 +146,7 @@ const defaultEmptyImage = {
 
 class AvatarEditor extends React.Component {
   static propTypes = {
+    printMarks: PropTypes.object,
     scale: PropTypes.number,
     rotate: PropTypes.number,
     image: PropTypes.oneOfType([
@@ -178,6 +179,7 @@ class AvatarEditor extends React.Component {
   }
 
   static defaultProps = {
+    printMarks: {},
     scale: 1,
     rotate: 0,
     border: 25,
@@ -704,6 +706,7 @@ class AvatarEditor extends React.Component {
 
   render() {
     const {
+      printMarks,
       scale,
       rotate,
       image,
