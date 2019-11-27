@@ -139,6 +139,70 @@ const drawRoundedRect = (context, x, y, width, height, borderRadius) => {
   }
 }
 
+/**
+ * Side extension for Bleeds. It draws the cut lines
+ * @param {object} context [canvas context]
+ * @param {number} outerBoxX [x pos of rectangle that forms the semi-transparent border] 
+ * @param {number} outerBoxY [y pos of rectangle that forms the semi-transparent border]
+ * @param {number} innerBoxWidth [width of rectangle that holds the image]
+ * @param {number} innerBoxHeight [height of rectangle that holds the image]
+*/
+const drawCutLines = (context, outerBoxX, outerBoxY, innerBoxWidth, innerBoxHeight) => {
+  const bleedOffset = 20; // TODO: make this dynamic from the DB
+  context.strokeStyle = '#ffffff';
+  context.lineWidth = 2;
+  context.setLineDash([7, 3]);
+
+  // TODO: Update the moveTo (start at) and lineTo (end at) values to be dynamic
+  // top 
+  context.beginPath();
+  context.moveTo(0, outerBoxY + bleedOffset);
+  context.lineTo(innerBoxWidth, outerBoxY + bleedOffset);
+  context.stroke();
+  context.closePath();
+
+  // right
+  context.beginPath();
+  context.moveTo(innerBoxWidth - outerBoxX - bleedOffset, 0);
+  context.lineTo(innerBoxWidth - outerBoxX - bleedOffset, innerBoxHeight);
+  context.stroke();
+  context.closePath();
+
+  // bottom
+  context.beginPath();
+  context.moveTo(0, innerBoxHeight - outerBoxY);
+  context.lineTo(innerBoxWidth, innerBoxHeight - outerBoxY);
+  context.stroke();
+  context.closePath();
+
+  // left
+  context.beginPath();
+  context.moveTo(outerBoxX + bleedOffset, 0);
+  context.lineTo(outerBoxX + bleedOffset, innerBoxHeight);
+  context.stroke();
+  context.closePath();
+}
+
+/**
+ * Side extension for Bleeds. It draws the bleed rectangle by using the semi-transparent border's
+ * x, y position as the top, left of the rectangle, and using the image container as the height and
+ * width of the rectangle.
+ * @param {object} context [canvas context]
+ * @param {number} outerBoxX [x pos of rectangle that forms the semi-transparent border] 
+ * @param {number} outerBoxY [y pos of rectangle that forms the semi-transparent border]
+ * @param {number} innerBoxWidth [width of rectangle that holds the image]
+ * @param {number} innerBoxHeight [height of rectangle that holds the image]
+*/
+const drawBleedRect = (context, outerBoxX, outerBoxY, innerBoxWidth, innerBoxHeight) => {
+  context.strokeStyle = '#E03F6F';
+  context.lineWidth = 2;
+  context.setLineDash([]);
+
+  context.beginPath();
+  context.strokeRect(outerBoxX, outerBoxY, innerBoxWidth, innerBoxHeight);
+  context.closePath();
+}
+
 const defaultEmptyImage = {
   x: 0.5,
   y: 0.5,
@@ -611,6 +675,22 @@ class AvatarEditor extends React.Component {
     )
     context.rect(width, 0, -width, height) // outer rect, drawn "counterclockwise"
     context.fill('evenodd')
+
+    drawCutLines(
+      context, 
+      borderSizeX,
+      borderSizeY,
+      width, 
+      height
+    )
+
+    drawBleedRect(
+      context, 
+      borderSizeX,
+      borderSizeY,
+      width - borderSizeX * 2,
+      height - borderSizeY * 2
+    )
 
     context.restore()
   }
