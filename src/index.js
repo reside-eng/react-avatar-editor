@@ -2,6 +2,7 @@
 import PropTypes from 'prop-types'
 import React from 'react'
 import ReactDOM from 'react-dom'
+import get from 'lodash/get'
 
 import loadImageURL from './utils/load-image-url'
 import loadImageFile from './utils/load-image-file'
@@ -148,23 +149,21 @@ const drawRoundedRect = (context, x, y, width, height, borderRadius) => {
  * @param {number} innerBoxHeight [height of rectangle that holds the image]
 */
 const drawCutLines = (context, outerBoxX, outerBoxY, innerBoxWidth, innerBoxHeight) => {
-  const bleedOffset = 20; // TODO: make this dynamic from the DB
   context.strokeStyle = '#ffffff';
   context.lineWidth = 2;
   context.setLineDash([7, 3]);
 
-  // TODO: Update the moveTo (start at) and lineTo (end at) values to be dynamic
   // top 
   context.beginPath();
-  context.moveTo(0, outerBoxY + bleedOffset);
-  context.lineTo(innerBoxWidth, outerBoxY + bleedOffset);
+  context.moveTo(0, outerBoxY);
+  context.lineTo(innerBoxWidth, outerBoxY);
   context.stroke();
   context.closePath();
 
   // right
   context.beginPath();
-  context.moveTo(innerBoxWidth - outerBoxX - bleedOffset, 0);
-  context.lineTo(innerBoxWidth - outerBoxX - bleedOffset, innerBoxHeight);
+  context.moveTo(innerBoxWidth - outerBoxX, 0);
+  context.lineTo(innerBoxWidth - outerBoxX, innerBoxHeight);
   context.stroke();
   context.closePath();
 
@@ -177,8 +176,8 @@ const drawCutLines = (context, outerBoxX, outerBoxY, innerBoxWidth, innerBoxHeig
 
   // left
   context.beginPath();
-  context.moveTo(outerBoxX + bleedOffset, 0);
-  context.lineTo(outerBoxX + bleedOffset, innerBoxHeight);
+  context.moveTo(outerBoxX, 0);
+  context.lineTo(outerBoxX, innerBoxHeight);
   context.stroke();
   context.closePath();
 }
@@ -620,7 +619,6 @@ class AvatarEditor extends React.Component {
     const [borderX, borderY] = this.getBorders(border)
 
     const croppingRect = this.getCroppingRect()
-
     const width = image.width * this.props.scale
     const height = image.height * this.props.scale
 
@@ -654,6 +652,16 @@ class AvatarEditor extends React.Component {
     const [borderSizeX, borderSizeY] = this.getBorders(dimensions.border)
     const height = dimensions.canvas.height
     const width = dimensions.canvas.width
+    const bleedDistance = get(this.props, 'printMarks.bleedDistance', 0)
+    const bleedEdges = get(this.props, 'printMarks.bleedEdges', null)
+
+    // rect dimensions used to draw the inner rect, and the bleed marks
+    const rectRightOffset = bleedEdges.left ? 2 : 1
+    const rectBottomOffset = bleedEdges.top ? 2 : 1
+    const rectTop = bleedEdges.top ? borderSizeY - bleedDistance : borderSizeY
+    const rectLeft = bleedEdges.left ? borderSizeX - bleedDistance : borderSizeX
+    const rectBottom = bleedEdges.bottom ? (height - borderSizeY * 2) + (bleedDistance * rectBottomOffset) : (height - borderSizeY * 2)
+    const rectRight = bleedEdges.right ? (width - borderSizeX * 2) + (bleedDistance * rectRightOffset) : (width - borderSizeX * 2)
 
     // clamp border radius between zero (perfect rectangle) and half the size without borders (perfect circle or "pill")
     borderRadius = Math.max(borderRadius, 0)
@@ -662,35 +670,38 @@ class AvatarEditor extends React.Component {
       width / 2 - borderSizeX,
       height / 2 - borderSizeY
     )
-
+    
     context.beginPath()
     // inner rect, possibly rounded
     drawRoundedRect(
       context,
-      borderSizeX,
-      borderSizeY,
-      width - borderSizeX * 2,
-      height - borderSizeY * 2,
+      rectLeft,
+      rectTop,
+      rectRight,
+      rectBottom,
       borderRadius
     )
     context.rect(width, 0, -width, height) // outer rect, drawn "counterclockwise"
     context.fill('evenodd')
 
-    drawCutLines(
-      context, 
-      borderSizeX,
-      borderSizeY,
-      width, 
-      height
-    )
-
-    drawBleedRect(
-      context, 
-      borderSizeX,
-      borderSizeY,
-      width - borderSizeX * 2,
-      height - borderSizeY * 2
-    )
+    // draw the print marks if the bleed distance is greater than 0
+    if (bleedDistance > 0) {
+      drawCutLines(
+        context, 
+        borderSizeX,
+        borderSizeY,
+        width, 
+        height
+      )
+  
+      drawBleedRect(
+        context, 
+        rectLeft,
+        rectTop,
+        rectRight,
+        rectBottom,
+      )
+    }
 
     context.restore()
   }
