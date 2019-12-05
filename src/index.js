@@ -641,6 +641,22 @@ class AvatarEditor extends React.Component {
     }
   }
 
+  // rect dimensions used to draw the inner rect, and the bleed marks
+  getRect(bleed, posX, posY, distance, canvasW, canvasH) {
+    // create offsets for the right and bottom bleeds if there are no left and top bleeds
+    const offsetX = bleed.left ? 2 : 1
+    const offsetY = bleed.top ? 2 : 1
+
+    const top = bleed.top ? posY - distance : posY
+    const left = bleed.left ? posX - distance : posX
+    const bottom = bleed.bottom ? 
+      (canvasH - posY * 2) + (distance * offsetY) : (canvasH - posY * 2) + distance
+    const right = bleed.right ?
+      (canvasW - posX * 2) + (distance * offsetX) : (canvasW - posX * 2) + distance
+
+    return [top, left, bottom, right]
+  }
+
   paint(context) {
     context.save()
     context.scale(pixelRatio, pixelRatio)
@@ -654,14 +670,7 @@ class AvatarEditor extends React.Component {
     const width = dimensions.canvas.width
     const bleedDistance = get(this.props, 'printMarks.bleedDistance', 0)
     const bleedEdges = get(this.props, 'printMarks.bleedEdges', null)
-
-    // rect dimensions used to draw the inner rect, and the bleed marks
-    const rectRightOffset = bleedEdges.left ? 2 : 1
-    const rectBottomOffset = bleedEdges.top ? 2 : 1
-    const rectTop = bleedEdges.top ? borderSizeY - bleedDistance : borderSizeY
-    const rectLeft = bleedEdges.left ? borderSizeX - bleedDistance : borderSizeX
-    const rectBottom = bleedEdges.bottom ? (height - borderSizeY * 2) + (bleedDistance * rectBottomOffset) : (height - borderSizeY * 2)
-    const rectRight = bleedEdges.right ? (width - borderSizeX * 2) + (bleedDistance * rectRightOffset) : (width - borderSizeX * 2)
+    const [rectTop, rectLeft, rectBottom, rectRight] = this.getRect(bleedEdges, borderSizeX, borderSizeY, bleedDistance, width, height)
 
     // clamp border radius between zero (perfect rectangle) and half the size without borders (perfect circle or "pill")
     borderRadius = Math.max(borderRadius, 0)
@@ -686,6 +695,7 @@ class AvatarEditor extends React.Component {
 
     // draw the print marks if the bleed distance is greater than 0
     if (bleedDistance > 0) {
+      // white dotted line
       drawCutLines(
         context, 
         borderSizeX,
@@ -694,6 +704,7 @@ class AvatarEditor extends React.Component {
         height
       )
   
+      // red border
       drawBleedRect(
         context, 
         rectLeft,
