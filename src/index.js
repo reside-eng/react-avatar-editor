@@ -3,6 +3,7 @@ import PropTypes from 'prop-types'
 import React from 'react'
 import ReactDOM from 'react-dom'
 import get from 'lodash/get'
+import isEmpty from 'lodash/isEmpty'
 
 import loadImageURL from './utils/load-image-url'
 import loadImageFile from './utils/load-image-file'
@@ -642,7 +643,9 @@ class AvatarEditor extends React.Component {
   }
 
   // rect dimensions used to draw the inner rect, and the bleed marks
-  getRect(bleed, posX, posY, distance, canvasW, canvasH) {
+  getRect(bleed = {}, posX, posY, bleedDistance, canvasW, canvasH) {
+    const distance = !isEmpty(bleed) ? bleedDistance : 0
+
     // create offsets for the right and bottom bleeds if there are no left and top bleeds
     const offsetX = bleed.left ? 2 : 1
     const offsetY = bleed.top ? 2 : 1
@@ -669,7 +672,7 @@ class AvatarEditor extends React.Component {
     const height = dimensions.canvas.height
     const width = dimensions.canvas.width
     const bleedDistance = get(this.props, 'printMarks.bleedDistance', 0)
-    const bleedEdges = get(this.props, 'printMarks.bleedEdges', null)
+    const bleedEdges = get(this.props, 'printMarks.bleedEdges')
     const [rectTop, rectLeft, rectBottom, rectRight] = this.getRect(bleedEdges, borderSizeX, borderSizeY, bleedDistance, width, height)
 
     // clamp border radius between zero (perfect rectangle) and half the size without borders (perfect circle or "pill")
@@ -693,8 +696,8 @@ class AvatarEditor extends React.Component {
     context.rect(width, 0, -width, height) // outer rect, drawn "counterclockwise"
     context.fill('evenodd')
 
-    // draw the print marks if the bleed distance is greater than 0
-    if (bleedDistance > 0) {
+    // draw the print marks if the bleed edges exist
+    if (bleedEdges) {
       // white dotted line
       drawCutLines(
         context, 
