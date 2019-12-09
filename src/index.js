@@ -2,6 +2,8 @@
 import PropTypes from 'prop-types'
 import React from 'react'
 import ReactDOM from 'react-dom'
+import get from 'lodash/get'
+import isEmpty from 'lodash/isEmpty'
 
 import loadImageURL from './utils/load-image-url'
 import loadImageFile from './utils/load-image-file'
@@ -139,6 +141,68 @@ const drawRoundedRect = (context, x, y, width, height, borderRadius) => {
   }
 }
 
+/**
+ * Side extension for Bleeds. It draws the cut lines
+ * @param {object} context [canvas context]
+ * @param {number} outerBoxX [x pos of rectangle that forms the semi-transparent border] 
+ * @param {number} outerBoxY [y pos of rectangle that forms the semi-transparent border]
+ * @param {number} innerBoxWidth [width of rectangle that holds the image]
+ * @param {number} innerBoxHeight [height of rectangle that holds the image]
+*/
+const drawCutLines = (context, outerBoxX, outerBoxY, innerBoxWidth, innerBoxHeight) => {
+  context.strokeStyle = '#ffffff';
+  context.lineWidth = 2;
+  context.setLineDash([7, 3]);
+
+  // top 
+  context.beginPath();
+  context.moveTo(0, outerBoxY);
+  context.lineTo(innerBoxWidth, outerBoxY);
+  context.stroke();
+  context.closePath();
+
+  // right
+  context.beginPath();
+  context.moveTo(innerBoxWidth - outerBoxX, 0);
+  context.lineTo(innerBoxWidth - outerBoxX, innerBoxHeight);
+  context.stroke();
+  context.closePath();
+
+  // bottom
+  context.beginPath();
+  context.moveTo(0, innerBoxHeight - outerBoxY);
+  context.lineTo(innerBoxWidth, innerBoxHeight - outerBoxY);
+  context.stroke();
+  context.closePath();
+
+  // left
+  context.beginPath();
+  context.moveTo(outerBoxX, 0);
+  context.lineTo(outerBoxX, innerBoxHeight);
+  context.stroke();
+  context.closePath();
+}
+
+/**
+ * Side extension for Bleeds. It draws the bleed rectangle by using the semi-transparent border's
+ * x, y position as the top, left of the rectangle, and using the image container as the height and
+ * width of the rectangle.
+ * @param {object} context [canvas context]
+ * @param {number} outerBoxX [x pos of rectangle that forms the semi-transparent border] 
+ * @param {number} outerBoxY [y pos of rectangle that forms the semi-transparent border]
+ * @param {number} innerBoxWidth [width of rectangle that holds the image]
+ * @param {number} innerBoxHeight [height of rectangle that holds the image]
+*/
+const drawBleedRect = (context, outerBoxX, outerBoxY, innerBoxWidth, innerBoxHeight) => {
+  context.strokeStyle = '#E03F6F';
+  context.lineWidth = 2;
+  context.setLineDash([]);
+
+  context.beginPath();
+  context.strokeRect(outerBoxX, outerBoxY, innerBoxWidth, innerBoxHeight);
+  context.closePath();
+}
+
 const defaultEmptyImage = {
   x: 0.5,
   y: 0.5,
@@ -146,6 +210,7 @@ const defaultEmptyImage = {
 
 class AvatarEditor extends React.Component {
   static propTypes = {
+    printMarks: PropTypes.object,
     scale: PropTypes.number,
     rotate: PropTypes.number,
     image: PropTypes.oneOfType([
@@ -178,6 +243,7 @@ class AvatarEditor extends React.Component {
   }
 
   static defaultProps = {
+    printMarks: {},
     scale: 1,
     rotate: 0,
     border: 25,
@@ -554,7 +620,6 @@ class AvatarEditor extends React.Component {
     const [borderX, borderY] = this.getBorders(border)
 
     const croppingRect = this.getCroppingRect()
-
     const width = image.width * this.props.scale
     const height = image.height * this.props.scale
 
@@ -577,6 +642,24 @@ class AvatarEditor extends React.Component {
     }
   }
 
+  // rect dimensions used to draw the inner rect, and the bleed marks
+  getRect(bleed = {}, posX, posY, bleedDistance, canvasW, canvasH) {
+    const distance = !isEmpty(bleed) ? bleedDistance : 0
+
+    // create offsets for the right and bottom bleeds if there are no left and top bleeds
+    const offsetX = bleed.left ? 2 : 1
+    const offsetY = bleed.top ? 2 : 1
+
+    const top = bleed.top ? posY - distance : posY
+    const left = bleed.left ? posX - distance : posX
+    const bottom = bleed.bottom ? 
+      (canvasH - posY * 2) + (distance * offsetY) : (canvasH - posY * 2) + distance
+    const right = bleed.right ?
+      (canvasW - posX * 2) + (distance * offsetX) : (canvasW - posX * 2) + distance
+
+    return [top, left, bottom, right]
+  }
+
   paint(context) {
     context.save()
     context.scale(pixelRatio, pixelRatio)
@@ -588,6 +671,9 @@ class AvatarEditor extends React.Component {
     const [borderSizeX, borderSizeY] = this.getBorders(dimensions.border)
     const height = dimensions.canvas.height
     const width = dimensions.canvas.width
+    const bleedDistance = get(this.props, 'printMarks.bleedDistance', 0)
+    const bleedEdges = get(this.props, 'printMarks.bleedEdges')
+    const [rectTop, rectLeft, rectBottom, rectRight] = this.getRect(bleedEdges, borderSizeX, borderSizeY, bleedDistance, width, height)
 
     // clamp border radius between zero (perfect rectangle) and half the size without borders (perfect circle or "pill")
     borderRadius = Math.max(borderRadius, 0)
@@ -596,19 +682,40 @@ class AvatarEditor extends React.Component {
       width / 2 - borderSizeX,
       height / 2 - borderSizeY
     )
-
+    
     context.beginPath()
     // inner rect, possibly rounded
     drawRoundedRect(
       context,
-      borderSizeX,
-      borderSizeY,
-      width - borderSizeX * 2,
-      height - borderSizeY * 2,
+      rectLeft,
+      rectTop,
+      rectRight,
+      rectBottom,
       borderRadius
     )
     context.rect(width, 0, -width, height) // outer rect, drawn "counterclockwise"
     context.fill('evenodd')
+
+    // draw the print marks if the bleed edges exist
+    if (bleedEdges) {
+      // white dotted line
+      drawCutLines(
+        context, 
+        borderSizeX,
+        borderSizeY,
+        width, 
+        height
+      )
+  
+      // red border
+      drawBleedRect(
+        context, 
+        rectLeft,
+        rectTop,
+        rectRight,
+        rectBottom,
+      )
+    }
 
     context.restore()
   }
@@ -704,6 +811,7 @@ class AvatarEditor extends React.Component {
 
   render() {
     const {
+      printMarks,
       scale,
       rotate,
       image,
