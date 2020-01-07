@@ -3,7 +3,6 @@ import PropTypes from 'prop-types'
 import React from 'react'
 import ReactDOM from 'react-dom'
 import get from 'lodash/get'
-import isEmpty from 'lodash/isEmpty'
 
 import loadImageURL from './utils/load-image-url'
 import loadImageFile from './utils/load-image-file'
@@ -645,17 +644,6 @@ class AvatarEditor extends React.Component {
       height,
       width,
     }
-  }
-
-  // rect dimensions used to draw the inner rect, and the bleed marks
-  getRect(bleed = {}, posX, posY, bleedDistance, canvasW, canvasH) {
-    const distance = !isEmpty(bleed) ? bleedDistance : 0
-    const top = posY
-    const left = posX
-    const bottom = canvasH - posY
-    const right = canvasW - posX
-
-    return [top, left, bottom, right]
   }
 
   paint(context) {
