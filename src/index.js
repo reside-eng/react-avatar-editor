@@ -3,7 +3,6 @@ import PropTypes from 'prop-types'
 import React from 'react'
 import ReactDOM from 'react-dom'
 import get from 'lodash/get'
-import isEmpty from 'lodash/isEmpty'
 
 import loadImageURL from './utils/load-image-url'
 import loadImageFile from './utils/load-image-file'
@@ -149,36 +148,41 @@ const drawRoundedRect = (context, x, y, width, height, borderRadius) => {
  * @param {number} innerBoxWidth [width of rectangle that holds the image]
  * @param {number} innerBoxHeight [height of rectangle that holds the image]
 */
-const drawCutLines = (context, outerBoxX, outerBoxY, innerBoxWidth, innerBoxHeight) => {
+const drawCutLines = (context, outerBoxX, outerBoxY, innerBoxWidth, innerBoxHeight, bleedDistance, bleedEdges) => {
+  const bleedTop = bleedEdges.top ? bleedDistance : 0
+  const bleedRight = bleedEdges.right ? bleedDistance : 0
+  const bleedBottom = bleedEdges.bottom ? bleedDistance : 0
+  const bleedLeft = bleedEdges.left ? bleedDistance : 0
+
   context.strokeStyle = '#ffffff';
   context.lineWidth = 2;
   context.setLineDash([7, 3]);
 
   // top 
   context.beginPath();
-  context.moveTo(0, outerBoxY);
-  context.lineTo(innerBoxWidth, outerBoxY);
+  context.moveTo(0, outerBoxY + bleedTop);
+  context.lineTo(innerBoxWidth, outerBoxY + bleedTop);
   context.stroke();
   context.closePath();
 
   // right
   context.beginPath();
-  context.moveTo(innerBoxWidth - outerBoxX, 0);
-  context.lineTo(innerBoxWidth - outerBoxX, innerBoxHeight);
+  context.moveTo(innerBoxWidth - outerBoxX - bleedRight, 0);
+  context.lineTo(innerBoxWidth - outerBoxX - bleedRight, innerBoxHeight);
   context.stroke();
   context.closePath();
 
   // bottom
   context.beginPath();
-  context.moveTo(0, innerBoxHeight - outerBoxY);
-  context.lineTo(innerBoxWidth, innerBoxHeight - outerBoxY);
+  context.moveTo(0, innerBoxHeight - outerBoxY - bleedBottom);
+  context.lineTo(innerBoxWidth, innerBoxHeight - outerBoxY - bleedBottom);
   context.stroke();
   context.closePath();
 
   // left
   context.beginPath();
-  context.moveTo(outerBoxX, 0);
-  context.lineTo(outerBoxX, innerBoxHeight);
+  context.moveTo(outerBoxX + bleedLeft, 0);
+  context.lineTo(outerBoxX + bleedLeft, innerBoxHeight);
   context.stroke();
   context.closePath();
 }
@@ -642,24 +646,6 @@ class AvatarEditor extends React.Component {
     }
   }
 
-  // rect dimensions used to draw the inner rect, and the bleed marks
-  getRect(bleed = {}, posX, posY, bleedDistance, canvasW, canvasH) {
-    const distance = !isEmpty(bleed) ? bleedDistance : 0
-
-    // create offsets for the right and bottom bleeds if there are no left and top bleeds
-    const offsetX = bleed.left ? 2 : 1
-    const offsetY = bleed.top ? 2 : 1
-
-    const top = bleed.top ? posY - distance : posY
-    const left = bleed.left ? posX - distance : posX
-    const bottom = bleed.bottom ? 
-      (canvasH - posY * 2) + (distance * offsetY) : (canvasH - posY * 2) + distance
-    const right = bleed.right ?
-      (canvasW - posX * 2) + (distance * offsetX) : (canvasW - posX * 2) + distance
-
-    return [top, left, bottom, right]
-  }
-
   paint(context) {
     context.save()
     context.scale(pixelRatio, pixelRatio)
@@ -673,7 +659,6 @@ class AvatarEditor extends React.Component {
     const width = dimensions.canvas.width
     const bleedDistance = get(this.props, 'printMarks.bleedDistance', 0)
     const bleedEdges = get(this.props, 'printMarks.bleedEdges')
-    const [rectTop, rectLeft, rectBottom, rectRight] = this.getRect(bleedEdges, borderSizeX, borderSizeY, bleedDistance, width, height)
 
     // clamp border radius between zero (perfect rectangle) and half the size without borders (perfect circle or "pill")
     borderRadius = Math.max(borderRadius, 0)
@@ -687,10 +672,10 @@ class AvatarEditor extends React.Component {
     // inner rect, possibly rounded
     drawRoundedRect(
       context,
-      rectLeft,
-      rectTop,
-      rectRight,
-      rectBottom,
+      borderSizeX,
+      borderSizeY,
+      width - borderSizeX * 2,
+      height - borderSizeY * 2,
       borderRadius
     )
     context.rect(width, 0, -width, height) // outer rect, drawn "counterclockwise"
@@ -704,16 +689,18 @@ class AvatarEditor extends React.Component {
         borderSizeX,
         borderSizeY,
         width, 
-        height
+        height,
+        bleedDistance,
+        bleedEdges
       )
   
       // red border
       drawBleedRect(
         context, 
-        rectLeft,
-        rectTop,
-        rectRight,
-        rectBottom,
+        borderSizeX,
+        borderSizeY,
+        width - borderSizeX * 2,
+        height - borderSizeY * 2
       )
     }
 
