@@ -683,6 +683,15 @@ class AvatarEditor extends React.Component {
 
     // draw the print marks if the bleed edges exist
     if (bleedEdges) {
+      // red border
+      drawBleedRect(
+        context, 
+        borderSizeX,
+        borderSizeY,
+        width - borderSizeX * 2,
+        height - borderSizeY * 2
+      )
+
       // white dotted line
       drawCutLines(
         context, 
@@ -692,15 +701,6 @@ class AvatarEditor extends React.Component {
         height,
         bleedDistance,
         bleedEdges
-      )
-  
-      // red border
-      drawBleedRect(
-        context, 
-        borderSizeX,
-        borderSizeY,
-        width - borderSizeX * 2,
-        height - borderSizeY * 2
       )
     }
 
