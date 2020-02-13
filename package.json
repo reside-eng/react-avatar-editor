@@ -1,8 +1,11 @@
 {
   "name": "@reside-eng/react-avatar-editor",
-  "version": "3.139.0",
+  "version": "0.0.0-development",
   "description": "Avatar / profile picture component. Resize and crop your uploaded image using a intuitive user interface.",
   "main": "dist/index.js",
+  "engines": {
+    "node": ">=10.15.3"
+  },
   "scripts": {
     "clean": "rimraf dist",
     "build": "rollup -c",
@@ -11,23 +14,11 @@
     "test": "NODE_ENV=test jest",
     "test:watch": "NODE_ENV=test jest --watch",
     "demo:watch": "webpack-dev-server",
-    "demo:build": "NODE_ENV=production webpack",
-    "prepublish": "yarn run lint && yarn run test && yarn run clean && yarn run build",
-    "postversion": "git push --tags origin HEAD"
+    "demo:build": "NODE_ENV=production webpack"
   },
-  "author": {
-    "name": "Moritz Schwoerer",
-    "email": "mr.mosch@gmail.com"
-  },
-  "contributors": [
-    {
-      "name": "Daniel Lehr",
-      "email": "daniellehr@gmx.de"
-    }
-  ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/reside-eng/react-avatar-editor.git"
+    "url": "https://github.com/reside-eng/react-avatar-editor.git"
   },
   "license": "MIT",
   "keywords": [
@@ -40,11 +31,18 @@
     "profile",
     "image"
   ],
+  "husky": {
+    "hooks": {
+      "commit-msg": "commitlint -E HUSKY_GIT_PARAMS"
+    }
+  },
   "dependencies": {
-    "prop-types": "^15.5.8",
-    "lodash": "4.17.4"
+    "lodash": "4.17.4",
+    "prop-types": "^15.5.8"
   },
   "devDependencies": {
+    "@commitlint/cli": "8.3.5",
+    "@side-eng/commitlint-config": "0.0.1",
     "babel-cli": "^6.24.1",
     "babel-eslint": "7.2.2",
     "babel-jest": "22.4.1",
@@ -63,6 +61,7 @@
     "eslint-plugin-promise": "^3.7.0",
     "eslint-plugin-react": "^7.7.0",
     "eslint-plugin-standard": "^3.0.1",
+    "husky": "4.2.3",
     "jest": "22.4.2",
     "prettier": "1.16.4",
     "prop-types": "^15.5.8",
