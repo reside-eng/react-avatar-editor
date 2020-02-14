@@ -1,9 +1,5 @@
 # react-avatar-editor
 
-<a href="https://www.npmjs.com/package/react-avatar-editor"><img alt="npm version" src="https://badge.fury.io/js/react-avatar-editor.svg"></a>
-<a href="https://npmjs.org/package/react-avatar-editor"><img alt="Downloads" src="http://img.shields.io/npm/dm/react-avatar-editor.svg"></a>
-[![Build Status](https://travis-ci.org/mosch/react-avatar-editor.svg?branch=master)](https://travis-ci.org/mosch/react-avatar-editor)
-
 Facebook like, avatar / profile picture component.
 Resize, crop and rotate your uploaded image using a clear user interface.
 
@@ -13,12 +9,6 @@ Just use yarn or npm to add it to your project:
 
 ```
 yarn add react-avatar-editor
-```
-
-respective
-
-```
-npm install --save react-avatar-editor
 ```
 
 # Demo
@@ -166,14 +156,4 @@ fetch(canvas)
 
 # Contributing
 
-For development you can use following build tools:
-
-* `npm run build`: Builds the _minified_ dist file: `dist/index.js`
-* `npm run watch`: Watches for file changes and builds _unminified_ into: `dist/index.js`
-* `npm run demo:build`: Builds the demo based on the dist file `dist/index.js`
-* `npm run demo:watch`: Run webpack-dev-server. Check demo website [localhost:8080](http://localhost:8080)
-
-## Kudos 
-
-Kudos and thanks to [danlee](https://github.com/dan-lee) for the imporant work & many contributions to this project!
-Also thanks to [oyeanuj](https://github.com/oyeanuj), [mtlewis](https://github.com/mtlewis) and [hu9o](https://github.com/hu9o) and all other awesome people contributing to this.
+This repository follows the new [NPM Library CI/CD Workflow](https://residenetwork.atlassian.net/wiki/spaces/ENG/pages/1173291063/NPM+Library+CI+CD+Workflow). View those doc for more information on enforced Git commits and the release automation process.
