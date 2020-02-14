@@ -47,6 +47,7 @@ jobs:
         run: |
           yarn lint
           yarn test
+          git status
       - name: Archive Workspace on Failure
         if: failure()
         run: zip -r workspace-files ./
