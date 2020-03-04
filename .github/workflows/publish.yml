@@ -54,6 +54,7 @@ jobs:
       - name: Test
         run: |
           yarn lint
+          yarn format:check
           yarn test
       - name: Check Package Version
         uses: technote-space/package-version-check-action@v1

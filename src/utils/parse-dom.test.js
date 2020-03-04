@@ -3,8 +3,7 @@
 import parseDOM from './parse-dom'
 
 describe('parseDOM', () => {
-  let realDOMParser,
-    result
+  let realDOMParser, result
 
   beforeEach(() => {
     realDOMParser = global.DOMParser
