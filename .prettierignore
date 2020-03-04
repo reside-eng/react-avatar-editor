@@ -3,6 +3,4 @@ node_modules
 dist
 *.scss
 *.md
-es
-lib
-dist
+bundle.js*

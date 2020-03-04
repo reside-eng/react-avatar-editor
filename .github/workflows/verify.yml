@@ -46,6 +46,7 @@ jobs:
       - name: Test
         run: |
           yarn lint
+          yarn format:check
           yarn test
       - name: Archive Workspace on Failure
         if: failure()
